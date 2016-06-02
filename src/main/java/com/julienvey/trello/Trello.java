@@ -97,7 +97,7 @@ public interface Trello {
 
     void addCommentToCard(String idCard, String comment);
 
-	void addAttachmentToCard(String idCard, File file);
+    void addAttachmentToCard(String idCard, File file);
 
     Card updateCard(Card card);
 
