@@ -36,6 +36,7 @@ import static com.julienvey.trello.impl.TrelloUrl.GET_MEMBER;
 import static com.julienvey.trello.impl.TrelloUrl.UPDATE_CARD;
 import static com.julienvey.trello.impl.TrelloUrl.createUrl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +61,7 @@ import com.julienvey.trello.domain.Organization;
 import com.julienvey.trello.domain.TList;
 import com.julienvey.trello.impl.domaininternal.Comment;
 import com.julienvey.trello.impl.domaininternal.Label;
-import com.julienvey.trello.impl.domaininternal.PostAttachment;
+import com.julienvey.trello.impl.http.ApacheHttpClient;
 import com.julienvey.trello.impl.http.RestTemplateHttpClient;
 
 public class TrelloImpl implements Trello {
@@ -391,12 +392,20 @@ public class TrelloImpl implements Trello {
 	}
 
 	@Override
-	public void addAttachmentToCard(String idCard, byte[] bytes) {
-		postForObject(createUrl(ADD_ATTACHMENT_TO_CARD).asString(), new PostAttachment(bytes), PostAttachment.class,
-				idCard);
+	public void addAttachmentToCard(String idCard, File file) {
+		postFileForObject(createUrl(ADD_ATTACHMENT_TO_CARD).asString(), file, Attachment.class, idCard);
 	}
 
 	/* internal methods */
+
+	private <T> T postFileForObject(String url, File file, Class<T> objectClass, String... params) {
+		logger.debug("PostFileForObject request on Trello API at url {} for class {} with params {}", url,
+				objectClass.getCanonicalName(), params);
+		if (!(httpClient instanceof ApacheHttpClient)) {
+			throw new IllegalStateException("postForFile is implemented only on ApacheHttpClient.");
+		}
+		return ((ApacheHttpClient)httpClient).postFileForObject(url, file, objectClass, enrichParams(params));
+	}
 
 	private <T> T postForObject(String url, T object, Class<T> objectClass, String... params) {
 		logger.debug("PostForObject request on Trello API at url {} for class {} with params {}", url,
