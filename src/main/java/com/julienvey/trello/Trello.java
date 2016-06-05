@@ -68,6 +68,8 @@ public interface Trello {
 
     TList getList(String listId, Argument... args);
 
+    List<Card> getListCards(String listId, Argument... args);
+
     /* CheckLists */
 
     CheckList getCheckList(String checkListId, Argument... args);
