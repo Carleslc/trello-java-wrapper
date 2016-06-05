@@ -1,19 +1,34 @@
 package com.julienvey.trello.impl;
 
-import com.julienvey.trello.Trello;
-import com.julienvey.trello.TrelloHttpClient;
-import com.julienvey.trello.domain.*;
-import com.julienvey.trello.impl.domaininternal.Comment;
-import com.julienvey.trello.impl.domaininternal.Label;
-import com.julienvey.trello.impl.http.RestTemplateHttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.julienvey.trello.impl.TrelloUrl.*;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.julienvey.trello.impl.TrelloUrl.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.julienvey.trello.Trello;
+import com.julienvey.trello.TrelloHttpClient;
+import com.julienvey.trello.domain.Action;
+import com.julienvey.trello.domain.Argument;
+import com.julienvey.trello.domain.Attachment;
+import com.julienvey.trello.domain.Board;
+import com.julienvey.trello.domain.Card;
+import com.julienvey.trello.domain.CardWithActions;
+import com.julienvey.trello.domain.CheckItem;
+import com.julienvey.trello.domain.CheckList;
+import com.julienvey.trello.domain.Entity;
+import com.julienvey.trello.domain.Member;
+import com.julienvey.trello.domain.MyPrefs;
+import com.julienvey.trello.domain.Organization;
+import com.julienvey.trello.domain.TList;
+import com.julienvey.trello.impl.domaininternal.Comment;
+import com.julienvey.trello.impl.domaininternal.Label;
+import com.julienvey.trello.impl.http.ApacheHttpClient;
+import com.julienvey.trello.impl.http.RestTemplateHttpClient;
 
 public class TrelloImpl implements Trello {
 
@@ -335,6 +350,11 @@ public class TrelloImpl implements Trello {
     }
 
     @Override
+    public void addAttachmentToCard(String idCard, File file) {
+        postFileForObject(createUrl(ADD_ATTACHMENT_TO_CARD).asString(), file, Attachment.class, idCard);
+    }
+
+    @Override
     public Card updateCard(Card card) {
         Card put = put(createUrl(UPDATE_CARD).asString(), card, Card.class, card.getId());
         put.setInternalTrello(this);
@@ -342,6 +362,15 @@ public class TrelloImpl implements Trello {
     }
 
     /* internal methods */
+
+    private <T> T postFileForObject(String url, File file, Class<T> objectClass, String... params) {
+        logger.debug("PostFileForObject request on Trello API at url {} for class {} with params {}", url,
+                objectClass.getCanonicalName(), params);
+        if (!(httpClient instanceof ApacheHttpClient)) {
+            throw new IllegalStateException("postForFile is implemented only on ApacheHttpClient.");
+        }
+        return ((ApacheHttpClient)httpClient).postFileForObject(url, file, objectClass, enrichParams(params));
+    }
 
     private <T> T postForObject(String url, T object, Class<T> objectClass, String... params) {
         logger.debug("PostForObject request on Trello API at url {} for class {} with params {}", url, objectClass.getCanonicalName(), params);
